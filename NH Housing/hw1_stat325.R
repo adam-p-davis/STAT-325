@@ -237,7 +237,7 @@ main_content_vars <- list('yearbuilt', 'sqft', 'replcost', 'pctgood',
                           'acres', 'zone', 'neighborhood', 'landval')
 
 main_content_labs <- list('ctl01_lblYearBuilt', 'ctl01_lblBldArea',
-                          'ctl01_lblRcn', 'ctl01_lblPctGood', 'lblLndAcres',
+                          'ctl01_lblRcn"', 'ctl01_lblPctGood', 'lblLndAcres',
                           'lblZone', 'lblNbhd', 'lblLndAppr')
 
 main_content <- list()
@@ -257,7 +257,13 @@ find_main_content <- function(prop, main_content){
     }, error = function(e){return(NA)})
 }
 
-lapply(main_content_vars, function(x)return(property_data[[1]][grep(map_main_content(x, main_content), property_data[[1]])]))
+N <- lapply(main_content_vars, function(x)return(property_data[[1]][grep(map_main_content(x, main_content), property_data[[1]])]))
+lapply(N, function(x)
+  gsub("<[^<>]*>", "", x)
+  gsub("[^1-9.]", "", x)
+  trimws(x))
+
+main_content_parse_type <- list('A')
 
 find_main_content(property_data[[3]], main_content)
 property_data[[1]]

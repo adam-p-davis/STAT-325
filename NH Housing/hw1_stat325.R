@@ -57,11 +57,11 @@
 
 
 # Local file location
-# setwd("/Users/adamdavis/Documents/Documents/AdamDavis/College/4. Senior/Fall/STAT 325 - Statistical Case Studies/Week 1/VisionAppraisal/newdata2016")
+setwd("/Users/adamdavis/Documents/Documents/AdamDavis/College/4. Senior/Fall/STAT 325 - Statistical Case Studies/Week 1/VisionAppraisal/newdata2016")
 setwd("~/Documents/STAT 325/VisionAppraisal/newdata2016/")
 dir() 
 
-# Number of rows of data
+# Number of files
 n <- 27307
 
 # List of potential file names
@@ -230,7 +230,38 @@ properties <- within(properties, {
   address <- unlist(address_list)
 })
 
-find_year <-
+# A few of these problems can be solved in the same way, referencing some
+# MainContentlbl tag
 
+main_content_vars <- list('yearbuilt', 'sqft', 'replcost', 'pctgood', 
+                          'acres', 'zone', 'neighborhood', 'landval')
+
+main_content_labs <- list('ctl01_lblYearBuilt', 'ctl01_lblBldArea',
+                          'ctl01_lblRcn', 'ctl01_lblPctGood', 'lblLndAcres',
+                          'lblZone', 'lblNbhd', 'lblLndAppr')
+
+main_content <- list()
+for(i in 1:length(main_content_vars)){
+  main_content[[main_content_vars[[i]]]] <- main_content_labs[[i]]
+}
+
+map_main_content <- function(x, main_content){
+  return(main_content[[x]])
+}
+
+find_main_content <- function(prop, main_content){
+  tryCatch({
+    if(is.null(prop))return(NA)
+    content_lines <- lapply(main_content_vars, function(x)return(prop[grep(map_main_content(x, main_content), prop)]))
+    return(content_lines)
+    }, error = function(e){return(NA)})
+}
+
+lapply(main_content_vars, function(x)return(property_data[[1]][grep(map_main_content(x, main_content), property_data[[1]])]))
+
+find_main_content(property_data[[3]], main_content)
+property_data[[1]]
+
+main_content
 
 write.csv(properties, "hw1.csv")

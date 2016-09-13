@@ -148,6 +148,8 @@ find_beds <- function(x){
       beds <- gsub("\t", "", x[grep("Total Bedrooms:", x)], fixed = TRUE)
     } else if(sum(grepl("Ttl Bedrms:", x))){
       beds <- gsub("\t", "", x[grep("Ttl Bedrms:", x)], fixed = TRUE)
+    } else if(sum(grepl("Total Bedrms", x))){
+      beds <- gsub("\t", "", x[grep("Total Bedrms", x)], fixed = TRUE)
     }
     beds <- gsub("<[^<>]*>", "", beds)
     beds <- gsub("^\\s+|\\s+$", "", beds)
@@ -156,7 +158,6 @@ find_beds <- function(x){
 }
 
 beds_list <- lapply(property_data, function(x)find_beds(x))
-table(lapply(beds_list, length))
 
 # Multiple entries for some of the input -- we will sum them excluding NAs
 beds_2 <- rep(0, length(beds_list))
@@ -178,6 +179,8 @@ find_bath <- function(x){
       baths <- gsub("\t", "", x[grep("Total Bthrms:", x)], fixed = TRUE)
     } else if(sum(grepl("Ttl Bathrms:", x))){
       baths <- gsub("\t", "", x[grep("Ttl Bathrms:", x)], fixed = TRUE)
+    } else if(sum(grepl("Total Baths", x))){
+      baths <- gsub("\t", "", x[grep("Total Baths", x)], fixed = TRUE)
     }
     baths <- gsub("<[^<>]*>", "", baths)
     baths <- gsub("^\\s+|\\s+$", "", baths)
@@ -198,11 +201,25 @@ for(i in 1:length(bath_list)){
 }
 
 which(unlist(lapply(property_data, is.null))) %in% which(is.na(properties$bathrooms))
-which(is.na(properties$bathrooms))
 
-checker <- property_data[which(which(!(is.na(properties$bathrooms) %in% which(unlist(lapply(property_data, is.null))))))]
+checker <- property_data[which(is.na(properties$bathrooms))]
 
-checker[grep("Ttl Bathrms:", checker)]
+l1 <- lapply(property_data, function(x){
+  return(x[grep("Total Bthrms:", x)])
+})
+
+l2 <- lapply(property_data, function(x){
+  return(x[grep("Ttl Bathrms:", x)])
+})
+
+l3 <- lapply(property_data, function(x){
+  return(x[grep("Total Baths", x)])
+})
+
+unlist(l1)
+unlist(l2)
+unlist(l3)
+cbind(unlist(l1), unlist(l2), unlist(l3))
 
 properties$bathrooms <- bath_2
 table(properties$bathrooms)

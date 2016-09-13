@@ -79,6 +79,20 @@ properties <- data.frame("pid" = seq(1,n,1),
 property_data <- lapply(files, function(x)tryCatch({scan(x, what="", sep="\n")}, 
                                                    error = function(e){return(NULL)}))
 
+
+sample_size <- 1000
+sample_ <- sample(1:n, sample_size)
+files_sample <- as.list(paste0(sample_, ".html"))
+property_data <- lapply(files_sample, function(x)tryCatch({scan(x, what="", sep="\n")}, 
+                                                          error = function(e){return(NULL)}))
+properties <- data.frame("pid" = sample_, 
+                         "location" = character(sample_size), 
+                         "totval" = numeric(sample_size),
+                         "bedrooms" = numeric(sample_size),
+                         "bathrooms" = numeric(sample_size),
+                         "halfbaths" = numeric(sample_size))
+
+
 # Location description function
 find_loc <- function(x){
   tryCatch({
@@ -167,12 +181,11 @@ find_bath <- function(x){
     }
     baths <- gsub("<[^<>]*>", "", baths)
     baths <- gsub("^\\s+|\\s+$", "", baths)
-    return(as.numeric(gsub("[^0-9]", "", baths)))
+    return(as.numeric(gsub("[^0-9.]", "", baths)))
   }, error = function(e){return(NA)})
 }
 
 bath_list <- lapply(property_data, function(x)find_bath(x))
-bath_list[which(unlist(lapply(bath_list, length)) != 1)]
 
 bath_2 <- rep(0, length(bath_list))
 for(i in 1:length(bath_list)){
@@ -184,6 +197,7 @@ for(i in 1:length(bath_list)){
 }
 
 properties$bathrooms <- bath_2
+table(properties$bathrooms)
 
 find_half <- function(x){
   tryCatch({
@@ -195,7 +209,7 @@ find_half <- function(x){
     }
     halfs <- gsub("<[^<>]*>", "", halfs)
     halfs <- gsub("^\\s+|\\s+$", "", halfs)
-    return(as.numeric(gsub("[^0-9]", "", halfs)))
+    return(as.numeric(gsub("[^0-9.]", "", halfs)))
   }, error = function(e){return(NA)})
 }
 
@@ -210,8 +224,6 @@ for(i in 1:length(half_list)){
   half_2[i] <- sum(na.omit(half_list[[i]]))
   }
 }
-
-x <- 1
 
 ## Owner address
 find_address <- function(x){
@@ -230,6 +242,7 @@ properties <- within(properties, {
   address <- unlist(address_list)
 })
 
+
 # A few of these problems can be solved in the same way, referencing some
 # MainContentlbl tag
 
@@ -245,29 +258,43 @@ for(i in 1:length(main_content_vars)){
   main_content[[main_content_vars[[i]]]] <- main_content_labs[[i]]
 }
 
-map_main_content <- function(x, main_content){
-  return(main_content[[x]])
-}
-
 find_main_content <- function(prop, main_content){
   tryCatch({
     if(is.null(prop))return(NA)
-    content_lines <- lapply(main_content_vars, function(x)return(prop[grep(map_main_content(x, main_content), prop)]))
+    content_lines <- lapply(main_content_vars, function(x)return(prop[grep(main_content[[x]], prop)]))
     return(content_lines)
     }, error = function(e){return(NA)})
 }
 
-N <- lapply(main_content_vars, function(x)return(property_data[[1]][grep(map_main_content(x, main_content), property_data[[1]])]))
-lapply(N, function(x)
-  gsub("<[^<>]*>", "", x)
-  gsub("[^1-9.]", "", x)
-  trimws(x))
+multi_prop_map <- function(x, main_content, main_content_vars){
+  lapply(main_content_vars, function(z){
+    single_var_list <- lapply(x, function(y){
+      return(y[grep(main_content[[z]], y)])
+    })
+    return(single_var_list)
+  })
+}
 
-main_content_parse_type <- list('A')
+type_0_vars <- multi_prop_map(small_property_data, main_content, main_content_vars)
 
-find_main_content(property_data[[3]], main_content)
-property_data[[1]]
+type_0_vals <- lapply(type_0_vars, function(x){
+  temp <- gsub("<[^<>]*>", "", x)
+  temp <- gsub("\t", "", temp, fixed = TRUE)
+  temp <- gsub("[$,]", "", temp)
+  text <- c("Size \\(Acres\\)", "Zone", "Neighborhood", "Appraised Value")
+  for(i in text){
+    temp <- gsub(i, "", temp)
+  }
+  temp <- gsub("^\\s+|\\s+$", "", temp)
+  temp[temp == ""] <- NA
+  return(temp)
+})
 
-main_content
+numeric_class <- c(1:5, 8)
+for(i in numeric_class){
+  type_0_vals[[i]] <- as.numeric(unlist(type_0_vals[[i]]))
+}
+
+type_0_vals
 
 write.csv(properties, "hw1.csv")

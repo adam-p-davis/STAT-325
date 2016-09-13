@@ -181,11 +181,12 @@ find_bath <- function(x){
     }
     baths <- gsub("<[^<>]*>", "", baths)
     baths <- gsub("^\\s+|\\s+$", "", baths)
-    return(as.numeric(gsub("[^0-9.]", "", baths)))
+    return(as.numeric(gsub("[^0-9.+]", "", baths)))
   }, error = function(e){return(NA)})
 }
 
 bath_list <- lapply(property_data, function(x)find_bath(x))
+
 
 bath_2 <- rep(0, length(bath_list))
 for(i in 1:length(bath_list)){
@@ -195,6 +196,13 @@ for(i in 1:length(bath_list)){
     bath_2[i] <- sum(na.omit(bath_list[[i]]))
   }
 }
+
+which(unlist(lapply(property_data, is.null))) %in% which(is.na(properties$bathrooms))
+which(is.na(properties$bathrooms))
+
+checker <- property_data[which(which(!(is.na(properties$bathrooms) %in% which(unlist(lapply(property_data, is.null))))))]
+
+checker[grep("Ttl Bathrms:", checker)]
 
 properties$bathrooms <- bath_2
 table(properties$bathrooms)
@@ -216,8 +224,6 @@ find_half <- function(x){
 
 half_list <- lapply(property_data, function(x)find_half(x))
 half_list[which(unlist(lapply(half_list, length)) != 1)]
-
-lapply(half_list[which(is.na(half_list))], function(x)return(length(na.omit(x))))
 
 half_2 <- rep(0, length(half_list))
 for(i in 1:length(half_list)){

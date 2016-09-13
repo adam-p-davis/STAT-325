@@ -267,28 +267,33 @@ find_main_content <- function(prop, main_content){
 }
 
 multi_prop_map <- function(x, main_content, main_content_vars){
-  lapply(main_content_vars, function(z){
-    single_var_list <- lapply(x, function(y){
-      return(y[grep(main_content[[z]], y)])
-    })
-    return(single_var_list)
-  })
+  tryCatch({
+    lapply(main_content_vars, function(z){
+      single_var_list <- lapply(x, function(y){
+        return(y[grep(main_content[[z]], y)])
+      })
+      return(single_var_list)
+    })}, error = function(e){return(NA)})
 }
 
-type_0_vars <- multi_prop_map(small_property_data, main_content, main_content_vars)
+type_0_vars <- multi_prop_map(property_data, main_content, main_content_vars)
 
 type_0_vals <- lapply(type_0_vars, function(x){
-  temp <- gsub("<[^<>]*>", "", x)
-  temp <- gsub("\t", "", temp, fixed = TRUE)
-  temp <- gsub("[$,]", "", temp)
-  text <- c("Size \\(Acres\\)", "Zone", "Neighborhood", "Appraised Value")
-  for(i in text){
-    temp <- gsub(i, "", temp)
-  }
-  temp <- gsub("^\\s+|\\s+$", "", temp)
-  temp[temp == ""] <- NA
-  return(temp)
+  tryCatch({
+    temp <- gsub("<[^<>]*>", "", x)
+    temp <- gsub("\t", "", temp, fixed = TRUE)
+    temp <- gsub("[$,]", "", temp)
+    text <- c("Size \\(Acres\\)", "Zone", "Neighborhood", "Appraised Value")
+    for(i in text){
+      temp <- gsub(i, "", temp)
+    }
+    temp <- gsub("^\\s+|\\s+$", "", temp)
+    temp[temp == ""] <- NA
+    return(temp)
+  }, error = function(e){return(NA)})
 })
+
+type_0_vals
 
 numeric_class <- c(1:5, 8)
 for(i in numeric_class){

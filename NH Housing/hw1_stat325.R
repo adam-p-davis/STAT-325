@@ -268,6 +268,7 @@ find_main_content <- function(prop, main_content){
 
 multi_prop_map <- function(x, main_content, main_content_vars){
   tryCatch({
+    if(is.null(x))return(NA)
     lapply(main_content_vars, function(z){
       single_var_list <- lapply(x, function(y){
         return(y[grep(main_content[[z]], y)])
@@ -277,9 +278,11 @@ multi_prop_map <- function(x, main_content, main_content_vars){
 }
 
 type_0_vars <- multi_prop_map(property_data, main_content, main_content_vars)
+type_0_vars
 
 type_0_vals <- lapply(type_0_vars, function(x){
   tryCatch({
+    if(is.null(x))return(NA)
     temp <- gsub("<[^<>]*>", "", x)
     temp <- gsub("\t", "", temp, fixed = TRUE)
     temp <- gsub("[$,]", "", temp)
@@ -289,6 +292,8 @@ type_0_vals <- lapply(type_0_vars, function(x){
     }
     temp <- gsub("^\\s+|\\s+$", "", temp)
     temp[temp == ""] <- NA
+    temp[is.null(temp)] <- NA
+    temp[temp == "NULL"] <- NA
     return(temp)
   }, error = function(e){return(NA)})
 })

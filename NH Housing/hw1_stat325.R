@@ -199,6 +199,7 @@ for(i in 1:length(bath_list)){
 properties$bathrooms <- bath_2
 table(properties$bathrooms)
 
+
 find_half <- function(x){
   tryCatch({
     if(is.null(x))return(NA)
@@ -216,6 +217,8 @@ find_half <- function(x){
 half_list <- lapply(property_data, function(x)find_half(x))
 half_list[which(unlist(lapply(half_list, length)) != 1)]
 
+lapply(half_list[which(is.na(half_list))], function(x)return(length(na.omit(x))))
+
 half_2 <- rep(0, length(half_list))
 for(i in 1:length(half_list)){
   if(length(na.omit(half_list[[i]])) == 0){
@@ -225,6 +228,8 @@ for(i in 1:length(half_list)){
   }
 }
 
+properties$halfbaths <- half_2
+
 ## Owner address
 find_address <- function(x){
   tryCatch({
@@ -233,7 +238,7 @@ find_address <- function(x){
     address <- gsub("Address", "", address)
     address <- gsub("<[^<>]*>", " ", address)
     address <- gsub("\\s+", " ", address)
-    return(trimws(address))
+    return(gsub("^\\s+|\\s+$","",address))
   }, error = function(e){return(NA)})
 }
 
@@ -241,7 +246,6 @@ address_list <- lapply(property_data, function(x)find_address(x))
 properties <- within(properties, {
   address <- unlist(address_list)
 })
-
 
 # A few of these problems can be solved in the same way, referencing some
 # MainContentlbl tag
@@ -307,4 +311,16 @@ for(i in numeric_class){
 
 type_0_vals
 
-write.csv(properties, "hw1.csv")
+
+
+properties <- within(properties, {
+  for(i in 1:length(main_content_vars)){
+    assign(main_content_vars[[i]], unlist(type_0_vals[[i]]))
+  }
+  i <- NULL
+})
+
+head(properties)
+
+
+write.csv(properties, "sample_1.csv")

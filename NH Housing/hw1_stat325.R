@@ -56,13 +56,13 @@
 #      'garagesqft'
 
 # NEW 9/13/16
-#    - A logical (TRUE/FALSE) called 'multibuilding'.  See the post
+#    x A logical (TRUE/FALSE) called 'multibuilding'.  See the post
 #      on Piazza re: detecting this.  Don't spend time doing anything
 #      special or fancy for any of the values of such a property.  Not
 #      worth the effort for us.
-#    - A logical 'nineplus' indicating the cases where bedrooms was "9+",
+#    x A logical 'nineplus' indicating the cases where bedrooms was "9+",
 #      and then the value of 'bedrooms' should be the numeric value 9.
-#    - There may be more than one "Grade" rows in some of the files.  When
+#    x There may be more than one "Grade" rows in some of the files.  When
 #      this happens, use the first one.
 #
 # 9/13/16: Past sales!  We want up to 5 recent past sales.  Buyer,
@@ -179,8 +179,10 @@ find_beds <- function(x){
 beds_list <- lapply(property_data, function(x)find_beds(x))
 
 properties <- within(properties, {
-  nineplus <- unlist(lapply(lapply(beds_list, function(x)grepl("+",x, fixed = TRUE)), sum))
+  nineplus <- as.logical(unlist(lapply(lapply(beds_list, function(x)grepl("+",x, fixed = TRUE)), sum)))
 })
+
+beds_list <- lapply(beds_list, function(x)as.numeric(gsub("[^0-9.]","", x)))
 
 # Multiple entries for some of the input -- we will sum them excluding NAs
 beds_2 <- rep(0, length(beds_list))
@@ -202,7 +204,6 @@ l4 <- cbind(l1, l2, l3)
 identical(sample_[which(!rowSums(l4))], 
           sample_[which(unlist(lapply(property_data, is.null)))])
 
-beds_list[which(unlist(lapply(beds_list, length)) != 1)]
 properties$bedrooms <- beds_2
 
 find_bath <- function(x){
@@ -247,6 +248,7 @@ properties$bathrooms <- bath_2
 table(properties$bathrooms)
 
 
+
 find_half <- function(x){
   tryCatch({
     if(is.null(x))return(NA)
@@ -287,6 +289,10 @@ identical(sample_[which(!rowSums(l4))],
 
 
 properties$halfbaths <- half_2
+
+properties$halfbaths[which(properties$bathrooms %% 1 == .5)] <- properties$halfbaths[which(properties$bathrooms %% 1 == .5)] + 1
+properties$bathrooms[which(properties$bathrooms %% 1 == .5)] <- properties$bathrooms[which(properties$bathrooms %% 1 == .5)] - .5
+
 
 ## Owner address
 find_address <- function(x){
@@ -379,8 +385,10 @@ properties <- within(properties, {
 ### Back to TYPE 2 stuff (baths, half, etc.)
 # Style, model, grade, occupancy, AC Type, bedrooms, bathrooms,
 #      half baths, bath style, kitchen style
-#      'style' (X), 'model' (X), 'grade' (X), 'occupancy', 'actype', 'bedrooms' (X),
-#      'bathrooms' (X), 'halfbaths' (X), 'bathstyle', 'kstyle'
+#      'style' (X), 'model' (X), 'grade' (X), 'occupancy' (X), 'actype' (X), 'bedrooms' (X),
+#      'bathrooms' (X), 'halfbaths' (X), 'bathstyle' (X), 'kstyle' (X)
+
+
 
 
 find_style <- function(x){
@@ -438,7 +446,7 @@ search <- list(
   grade = c("Grade:", "Grade"),
   occupancy = c("Occupancy", "Occupancy"),
   actype = c("AC Type:", "AC Type"),
-  bathstyle = c("Bath Style:", "Bath Style:"),
+  bathstyle = c("Bath Style:", "Baths/Plumbing"),
   kstyle = c("Kitchen Style:", "Kitchen Style:")
 )
 reg <- list(
@@ -473,7 +481,6 @@ type_2 <- function(x, key_, search, reg){
           } else if(sum(grepl(searches[[key[[i]]]][2], y, fixed = TRUE))){
             keys <- gsub(searches[[key[[i]]]][2], "", gsub("\t", "", y[grep(searches[[key[[i]]]][2], y)], fixed = TRUE))
           }
-          if(key[[i]] == 'bathstyle')print(keys)
           keys <- gsub(regex[[key[[i]]]][[1]][1], regex[[key[[i]]]][[1]][2], keys)
           keys <- gsub(regex[[key[[i]]]][[2]][1], regex[[key[[i]]]][[2]][2], keys)
           keys <- gsub("^$|^\\s+$", NA, keys)
@@ -557,6 +564,7 @@ for(i in 1:length(two$bathstyle)){
 properties <- within(properties, {
   bathstyle <- bathstyle_2
 })
+properties$bathstyle
 
 # kstyle
 two$kstyle <- lapply(two$kstyle, function(x)gsub("model", NA, x, fixed = TRUE))
@@ -587,6 +595,22 @@ identical(sample_[which(!rowSums(l4))],
           sample_[which(unlist(lapply(property_data, is.null)))])
 
 # Type two checking routine ^
+
+## Multi building
+multi_list <- lapply(property_data, function(x){
+  tryCatch({
+    if(is.null(x))return(NA)
+    multi <- gsub("\t", "", x[grep("MainContent_lblBldCount", x)])
+    multi <- gsub("<[^<>]*>", "", multi)
+    multi <- gsub("^\\s+|\\s+$", "", multi)
+    return(as.numeric(multi))
+    }, error = function(e){return(NA)})
+  })
+
+properties <- within(properties, {
+  multibuilding <- unlist(multi_list) > 1
+})
+
 
 write.csv(properties, "sample_1.csv")
 

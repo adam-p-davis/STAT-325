@@ -422,35 +422,42 @@ find_style <- function(x){
   }, error = function(e){return(NA)})
 }
 
-keys <- list('model')
+key <- list('model')
 
-searches <- list(
-  model <- c("MODEL", "Model")
+search <- list(
+  model = c("MODEL", "Model")
 )
-regex <- list(
-  model <- list(
+reg <- list(
+  model = list(
     list(c("<[^<>]*>", ""),c("^\\s+|\\s+$", ""))
   )
 )
 
-type_2 <- function(x, key, searches, regex){
-    lapply(x, function(x, key = key, searches = searches, regex = regex){
+regex[['model']]
+type_2 <- function(x, key, search, reg){
+  result <- list()  
+ # for(i in 1:length(key)){
+  i <- 1
+      result[[key[[i]]]] <- lapply(x, function(y, key = key, searches = search, regex = reg){
         tryCatch({
-          if(is.null(x))return(NA)
-          if(sum(grepl(searches[[key]][1], x))){
-            keys <- gsub(searches[[key]][1], "", gsub("\t", "", x[grep(searches[[key]][1], x)], fixed = TRUE))
-          } else if(sum(grepl(searches[[key]][2], x, fixed = TRUE))){
-            keys <- gsub(searches[[key]][2], "", gsub("\t", "", x[grep(searches[[key]][2], x)], fixed = TRUE))
+          if(is.null(y))return(NA)
+          if(sum(grepl(searches[[key[[i]]]][1], y))){
+            keys <- gsub(searches[[key[[i]]]][1], "", gsub("\t", "", y[grep(searches[[key[[i]]]][1], y)], fixed = TRUE))
+          } else if(sum(grepl(searches[[key[[i]]]][2], y, fixed = TRUE))){
+            keys <- gsub(searches[[key[[i]]]][2], "", gsub("\t", "", y[grep(searches[[key[[i]]]][2], y)], fixed = TRUE))
           }
-          
-          keys <- gsub(regex[[key]][[1]][1], regex[[key]][[1]][2], keys)
-          keys <- gsub(regex[[key]][[2]][1], regex[[key]][[2]][2], keys)
+          print(keys)
+          keys <- gsub(regex[[key[[i]]]][[1]][1], regex[[key[[i]]]][[1]][2], keys)
+          keys <- gsub(regex[[key[[i]]]][[2]][1], regex[[key[[i]]]][[2]][2], keys)
           return(keys)
         }, error = function(e){return(NA)})
-      }))
-    }
+      })
+  #}
+  return(result)
 }
 
+
+two <- type_2(property_data, key, search, reg)
 
 
 style_list <- lapply(property_data, function(x)find_style(x))

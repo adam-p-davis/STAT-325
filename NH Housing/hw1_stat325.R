@@ -38,7 +38,7 @@
 #      'replcost'
 #    x Building percent good
 #      'pctgood'
-#    2 Style, model, grade, occupancy, AC Type, bedrooms, bathrooms,
+#    x Style, model, grade, occupancy, AC Type, bedrooms, bathrooms,
 #      half baths, bath style, kitchen style
 #      'style', 'model', 'grade', 'occupancy', 'actype', 'bedrooms',
 #      'bathrooms, 'halfbaths', 'bathstyle', 'kstyle'
@@ -54,6 +54,25 @@
 #      'landval'
 #    4 Gross area of anything that seems like a 'garage'
 #      'garagesqft'
+
+# NEW 9/13/16
+#    - A logical (TRUE/FALSE) called 'multibuilding'.  See the post
+#      on Piazza re: detecting this.  Don't spend time doing anything
+#      special or fancy for any of the values of such a property.  Not
+#      worth the effort for us.
+#    - A logical 'nineplus' indicating the cases where bedrooms was "9+",
+#      and then the value of 'bedrooms' should be the numeric value 9.
+#    - There may be more than one "Grade" rows in some of the files.  When
+#      this happens, use the first one.
+#
+# 9/13/16: Past sales!  We want up to 5 recent past sales.  Buyer,
+#          sale date, and price.  Let's make 15 columns,
+#          'buyer1', 'date1', 'price1', 'buyer2', ..., 'price5'
+#
+# 9/13/16: EVERYONE needs to do their block of geocoding, uploading the
+#          resulting file to Dropbox.com before 8 AM on Thursday.  This
+#          is done individually in a way tied to your NETID so we can get
+#          the whole city covered.
 
 
 # Local file location
@@ -153,11 +172,15 @@ find_beds <- function(x){
     }
     beds <- gsub("<[^<>]*>", "", beds)
     beds <- gsub("^\\s+|\\s+$", "", beds)
-    return(as.numeric(gsub("[^0-9]", "", beds)))
+    return(gsub("[^0-9+.]", "", beds))
   }, error = function(e){return(NA)})
 }
 
 beds_list <- lapply(property_data, function(x)find_beds(x))
+
+properties <- within(properties, {
+  nineplus <- unlist(lapply(lapply(beds_list, function(x)grepl("+",x, fixed = TRUE)), sum))
+})
 
 # Multiple entries for some of the input -- we will sum them excluding NAs
 beds_2 <- rep(0, length(beds_list))
@@ -563,7 +586,7 @@ l4 <- cbind(l1, l2)#, l3)
 identical(sample_[which(!rowSums(l4))], 
           sample_[which(unlist(lapply(property_data, is.null)))])
 
-# Type two checking routine
+# Type two checking routine ^
 
 write.csv(properties, "sample_1.csv")
 

@@ -356,7 +356,7 @@ properties <- within(properties, {
 ### Back to TYPE 2 stuff (baths, half, etc.)
 # Style, model, grade, occupancy, AC Type, bedrooms, bathrooms,
 #      half baths, bath style, kitchen style
-#      'style' (X), 'model', 'grade', 'occupancy', 'actype', 'bedrooms' (X),
+#      'style' (X), 'model' (X), 'grade' (X), 'occupancy', 'actype', 'bedrooms' (X),
 #      'bathrooms' (X), 'halfbaths' (X), 'bathstyle', 'kstyle'
 
 
@@ -407,19 +407,34 @@ properties <- within(properties, {
   style <- style_2
 })
 
-
 ## more type 2
-key_ <- list('model', 'grade')
+key_ <- list('model', 'grade', 'occupancy', 'actype', 'bathstyle', 'kstyle')
 
 search <- list(
   model = c("MODEL", "Model"),
-  grade = c("Grade:", "Grade")
+  grade = c("Grade:", "Grade"),
+  occupancy = c("Occupancy", "Occupancy"),
+  actype = c("AC Type:", "AC Type"),
+  bathstyle = c("Bath Style:", "Bath Style:"),
+  kstyle = c("Kitchen Style:", "Kitchen Style:")
 )
 reg <- list(
   model = list(
     c("<[^<>]*>", ""),c("^\\s+|\\s+$", "")
   ),
   grade = list(
+    c("<[^<>]*>", ""),c("^\\s+|\\s+$", "")
+  ),
+  occupancy = list(
+    c("<[^<>]*>", ""),c("^\\s+|\\s+$", "")
+  ),
+  actype = list(
+    c("<[^<>]*>", ""),c("^\\s+|\\s+$", "")
+  ),
+  bathstyle = list(
+    c("<[^<>]*>", ""),c("^\\s+|\\s+$", "")
+  ),
+  kstyle = list(
     c("<[^<>]*>", ""),c("^\\s+|\\s+$", "")
   )
 )
@@ -437,6 +452,7 @@ type_2 <- function(x, key_, search, reg){
           }
           keys <- gsub(regex[[key[[i]]]][[1]][1], regex[[key[[i]]]][[1]][2], keys)
           keys <- gsub(regex[[key[[i]]]][[2]][1], regex[[key[[i]]]][[2]][2], keys)
+          keys <- gsub("^$|^\\s+$", NA, keys)
           return(keys)
         }, error = function(e){return(NA)})
       })
@@ -445,15 +461,15 @@ type_2 <- function(x, key_, search, reg){
 }
 
 two <- type_2(property_data, key_, search, reg)
-two$grade
 
+# Still have to do some amount of manual processing
 # model
 model_2 <- rep(0, length(two$model))
 for(i in 1:length(two$model)){
   if(length(na.omit(two$model[[i]])) == 0){
     model_2[i] <- NA
   } else {
-    model_2[i] <- paste(unique(na.omit(style_list[[i]])), collapse = ', ')
+    model_2[i] <- paste(unique(na.omit(two$model[[i]])), collapse = ', ')
   }
 }
 
@@ -461,14 +477,39 @@ properties <- within(properties, {
   model <- model_2
 })
 
-
 # grade
+grade_2 <- rep(0, length(two$grade))
+for(i in 1:length(two$grade)){
+  if(length(na.omit(two$grade[[i]])) == 0){
+    grade_2[i] <- NA
+  } else {
+    grade_2[i] <- paste(unique(na.omit(two$grade[[i]])), collapse = ', ')
+  }
+}
+
+properties <- within(properties, {
+  grade <- grade_2
+})
+
+# occupancy
+occupancy_2 <- rep(0, length(two$occupancy))
+for(i in 1:length(two$occupancy)){
+  if(length(na.omit(two$occupancy[[i]])) == 0){
+    occupancy_2[i] <- NA
+  } else {
+    occupancy_2[i] <- sum(na.omit(as.numeric(two$occupancy[[i]])))
+  }
+}
+
+properties <- within(properties, {
+  occupancy <- occupancy_2
+})
 
 
 
 # The only ones that dont have these should be NULL
-l1 <- unlist(lapply(property_data, function(x)sum(grepl("STYLE", x))))
-l2 <- unlist(lapply(property_data, function(x)sum(grepl("<td>Style</td>", x))))
+l1 <- unlist(lapply(property_data, function(x)sum(grepl("Occupancy", x))))
+l2 <- unlist(lapply(property_data, function(x)sum(grepl("Occupancy", x))))
 l3 <- unlist(lapply(property_data, function(x)sum(grepl("Total Baths", x))))
 
 l4 <- cbind(l1, l2)#, l3)

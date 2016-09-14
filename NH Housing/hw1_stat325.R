@@ -611,6 +611,42 @@ properties <- within(properties, {
   multibuilding <- unlist(multi_list) > 1
 })
 
+features_list <- lapply(property_data, function(x){
+  tryCatch({
+    if(is.null(x))return(NA)
+    start <- "MainContent_panXF"
+    end <- "</table>"
+    features <- gsub("\t", "", x[grep(start, x):
+                                   (grep(start, x) + 
+                                      grep(end, x[grep(start, x):length(x)])[1])])
+    # features <- gsub("<[^<>]*>", "", features)
+    # features <- gsub("^\\s+|\\s+$", "", features)
+    return(features)
+  }, error = function(e){return(NA)})
+})
+
+features_list <- lapply(features_list, function(x)gsub("^\\s+|\\s+$", "", x))
+features_list_2 <- lapply(features_list, function(x){
+  tryCatch({
+    if(sum(is.na(x)) == length(x))return(NA)
+    if(sum(grepl("No Data for Extra Features", x)))return(NA)
+    val_lines <- x[grep("$", x, fixed = TRUE)]
+    val_lines <- gsub("<[^<>]*>", ";", val_lines)
+    val_lines <- gsub(";+", ";", val_lines)
+    val_lines <- gsub("^;|;$", "", val_lines)
+    val_lines <- strsplit(val_lines, ";")
+    val_lines <- lapply(val_lines, function(x){
+      return(as.numeric(gsub("[$,]", "", x[grep("$", x, fixed = TRUE)])))
+    })
+    return(sum(unlist(val_lines)))
+    #return(sum(na.omit(as.numeric(gsub("<[^<>]*>", "", x[grep("$", x, fixed = TRUE)])))))
+    
+  }, error = function(e){return(NA)})
+})
+
+properties <- within(properties, {
+  features_list_2
+})
 
 write.csv(properties, "sample_1.csv")
 

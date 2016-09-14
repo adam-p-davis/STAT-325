@@ -30,13 +30,13 @@
 #    1 Any sale dates and sale prices (say, up to the 5 most recent),
 #      along with the name of the owner on that same line.
 #      * you decide how to deal with this information *
-#    0 Year built
+#    x Year built
 #      'yearbuilt'
-#    0 Living area (this is in square feet)
+#    x Living area (this is in square feet)
 #      'sqft'
-#    0 Replacement cost
+#    x Replacement cost
 #      'replcost'
-#    0 Building percent good
+#    x Building percent good
 #      'pctgood'
 #    2 Style, model, grade, occupancy, AC Type, bedrooms, bathrooms,
 #      half baths, bath style, kitchen style
@@ -44,13 +44,13 @@
 #      'bathrooms, 'halfbaths', 'bathstyle', 'kstyle'
 #    3 The sum of the value of any extra features
 #      'exval'
-#    0 Land size (in acres)
+#    x Land size (in acres)
 #      'acres'
-#    0 Land use zone (like RS1, RS2, ...)
+#    x Land use zone (like RS1, RS2, ...)
 #      'zone'
-#    0 Neighborhood (like 0200, which should not be a number)
+#    x Neighborhood (like 0200, which should not be a number)
 #      'neighborhood'
-#    0 Appraised value of the land
+#    x Appraised value of the land
 #      'landval'
 #    4 Gross area of anything that seems like a 'garage'
 #      'garagesqft'
@@ -250,6 +250,7 @@ for(i in 1:length(half_list)){
   }
 }
 
+# The Total Baths template includes no Half bath extension
 l1 <- unlist(lapply(property_data, function(x)sum(grepl("Total Half Baths:", x))))
 l2 <- unlist(lapply(property_data, function(x)sum(grepl("Ttl Half Bths:", x))))
 l3 <- unlist(lapply(property_data, function(x)sum(grepl("Total Baths", x))))
@@ -257,9 +258,6 @@ l3 <- unlist(lapply(property_data, function(x)sum(grepl("Total Baths", x))))
 l4 <- cbind(l1, l2, l3)
 
 bath_2[l3 != 0]
-
-sample_[which(!rowSums(l4))]
-sample_[which(unlist(lapply(property_data, is.null)))]
 
 identical(sample_[which(!rowSums(l4))], 
           sample_[which(unlist(lapply(property_data, is.null)))])
@@ -358,6 +356,56 @@ properties <- within(properties, {
 })
 
 head(properties)
+
+### Back to TYPE 2 stuff (baths, half, etc.)
+# Style, model, grade, occupancy, AC Type, bedrooms, bathrooms,
+#      half baths, bath style, kitchen style
+#      'style', 'model', 'grade', 'occupancy', 'actype', 'bedrooms' (X),
+#      'bathrooms' (X), 'halfbaths' (X), 'bathstyle', 'kstyle'
+
+
+find_style <- function(x){
+  tryCatch({
+    if(is.null(x))return(NA)
+    if(sum(grepl("STYLE", x))){
+      styles <- gsub("STYLE", "", gsub("\t", "", x[grep("STYLE", x)], fixed = TRUE))
+    }
+    # } else if(sum(grepl("Ttl Bathrms:", x))){
+    #   styles <- gsub("\t", "", x[grep("Ttl Bathrms:", x)], fixed = TRUE)
+    # } else if(sum(grepl("Total Baths", x))){
+    #   styles <- gsub("\t", "", x[grep("Total Baths", x)], fixed = TRUE)
+    # }
+    styles <- gsub("<[^<>]*>", "", styles)
+    styles <- gsub("^\\s+|\\s+$", "", styles)
+    return(styles)
+  }, error = function(e){return(NA)})
+}
+
+style_list <- lapply(property_data, function(x)find_style(x))
+
+unlist(style_list)
+
+style_2 <- rep(0, length(style_list))
+for(i in 1:length(style_list)){
+  if(length(na.omit(style_list[[i]])) == 0){
+    style_2[i] <- NA
+  } else {
+    style_2[i] <- sum(na.omit(bath_list[[i]]))
+  }
+}
+
+# The only ones that dont have these should be NULL
+l1 <- unlist(lapply(property_data, function(x)sum(grepl("Total Bthrms:", x))))
+l2 <- unlist(lapply(property_data, function(x)sum(grepl("Ttl Bathrms:", x))))
+l3 <- unlist(lapply(property_data, function(x)sum(grepl("Total Baths", x))))
+
+l4 <- cbind(l1, l2, l3)
+
+identical(sample_[which(!rowSums(l4))], 
+          sample_[which(unlist(lapply(property_data, is.null)))])
+
+properties$bathrooms <- bath_2
+
 
 
 write.csv(properties, "sample_1.csv")

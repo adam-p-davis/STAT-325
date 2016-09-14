@@ -407,38 +407,23 @@ properties <- within(properties, {
   style <- style_2
 })
 
-find_style <- function(x){
-  tryCatch({
-    if(is.null(x))return(NA)
-    if(sum(grepl("STYLE", x))){
-      styles <- gsub("STYLE", "", gsub("\t", "", x[grep("STYLE", x)], fixed = TRUE))
-    } else if(sum(grepl("<td>Style</td>", x, fixed = TRUE))){
-      styles <- gsub("Style", "", gsub("\t", "", x[grep("<td>Style</td>", x)], fixed = TRUE))
-    }
-    
-    styles <- gsub("<[^<>]*>", "", styles)
-    styles <- gsub("^\\s+|\\s+$", "", styles)
-    return(styles)
-  }, error = function(e){return(NA)})
-}
 
-key <- list('model')
+## more type 2
+key_ <- list('model')
 
 search <- list(
   model = c("MODEL", "Model")
 )
 reg <- list(
   model = list(
-    list(c("<[^<>]*>", ""),c("^\\s+|\\s+$", ""))
+    c("<[^<>]*>", ""),c("^\\s+|\\s+$", "")
   )
 )
 
-regex[['model']]
-type_2 <- function(x, key, search, reg){
+type_2 <- function(x, key_, search, reg){
   result <- list()  
- # for(i in 1:length(key)){
-  i <- 1
-      result[[key[[i]]]] <- lapply(x, function(y, key = key, searches = search, regex = reg){
+ for(i in 1:length(key)){
+      result[[key[[i]]]] <- lapply(x, function(y, key = key_, searches = search, regex = reg){
         tryCatch({
           if(is.null(y))return(NA)
           if(sum(grepl(searches[[key[[i]]]][1], y))){
@@ -446,19 +431,32 @@ type_2 <- function(x, key, search, reg){
           } else if(sum(grepl(searches[[key[[i]]]][2], y, fixed = TRUE))){
             keys <- gsub(searches[[key[[i]]]][2], "", gsub("\t", "", y[grep(searches[[key[[i]]]][2], y)], fixed = TRUE))
           }
-          print(keys)
           keys <- gsub(regex[[key[[i]]]][[1]][1], regex[[key[[i]]]][[1]][2], keys)
           keys <- gsub(regex[[key[[i]]]][[2]][1], regex[[key[[i]]]][[2]][2], keys)
           return(keys)
         }, error = function(e){return(NA)})
       })
-  #}
+  }
   return(result)
 }
 
-
 two <- type_2(property_data, key, search, reg)
 
+# model
+model_2 <- rep(0, length(two$model))
+for(i in 1:length(two$model)){
+  if(length(na.omit(two$model[[i]])) == 0){
+    model_2[i] <- NA
+  } else {
+    model_2[i] <- paste(unique(style_list[[i]]), collapse = ', ')
+  }
+}
+
+properties <- within(properties, {
+  model <- 1
+}
+
+unlist(two)
 
 style_list <- lapply(property_data, function(x)find_style(x))
 style_list

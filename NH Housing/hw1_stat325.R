@@ -422,9 +422,19 @@ find_style <- function(x){
   }, error = function(e){return(NA)})
 }
 
+keys <- list('model')
+
+searches <- list(
+  model <- c("MODEL", "Model")
+)
+regex <- list(
+  model <- list(
+    list(c("<[^<>]*>", ""),c("^\\s+|\\s+$", ""))
+  )
+)
+
 type_2 <- function(x, key, searches, regex){
-    for(i in 1:length(key)){
-      assign(paste0(key[[i]], "_list"), lapply(x, function(x, key = key, searches = searches, regex = regex){
+    lapply(x, function(x, key = key, searches = searches, regex = regex){
         tryCatch({
           if(is.null(x))return(NA)
           if(sum(grepl(searches[[key]][1], x))){
@@ -441,11 +451,6 @@ type_2 <- function(x, key, searches, regex){
     }
 }
 
-
-nombres <- c('model')
-for(i in nombres){
-  assign(paste0("find_", i), write_type_2(i, ))
-}
 
 
 style_list <- lapply(property_data, function(x)find_style(x))

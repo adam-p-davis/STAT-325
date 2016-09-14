@@ -450,6 +450,7 @@ type_2 <- function(x, key_, search, reg){
           } else if(sum(grepl(searches[[key[[i]]]][2], y, fixed = TRUE))){
             keys <- gsub(searches[[key[[i]]]][2], "", gsub("\t", "", y[grep(searches[[key[[i]]]][2], y)], fixed = TRUE))
           }
+          if(key[[i]] == 'bathstyle')print(keys)
           keys <- gsub(regex[[key[[i]]]][[1]][1], regex[[key[[i]]]][[1]][2], keys)
           keys <- gsub(regex[[key[[i]]]][[2]][1], regex[[key[[i]]]][[2]][2], keys)
           keys <- gsub("^$|^\\s+$", NA, keys)
@@ -461,7 +462,6 @@ type_2 <- function(x, key_, search, reg){
 }
 
 two <- type_2(property_data, key_, search, reg)
-
 # Still have to do some amount of manual processing
 # model
 model_2 <- rep(0, length(two$model))
@@ -519,7 +519,30 @@ properties <- within(properties, {
   actype <- actype_2
 })
 
-#
+# bathstyle
+two$bathstyle <- lapply(two$bathstyle, function(x)gsub("model", NA, x, fixed = TRUE))
+two$bathstyle <- lapply(two$bathstyle, function(x)gsub("&nbsp;", NA, x, fixed = TRUE))
+bathstyle_2 <- rep(0, length(two$bathstyle))
+for(i in 1:length(two$bathstyle)){
+  if(length(na.omit(two$bathstyle[[i]])) == 0){
+    bathstyle_2[i] <- NA
+  } else {
+    bathstyle_2[i] <- paste(unique(na.omit(two$bathstyle[[i]])), collapse = ', ')
+  }
+}
+
+properties <- within(properties, {
+  bathstyle <- bathstyle_2
+})
+
+properties$bathstyle
+
+# kk <- gsub(search[['bathstyle']][1], "", gsub("\t", "", x[grep(search[['bathstyle']][1], x)], fixed = TRUE))
+# kk <- gsub(search[['bathstyle']][2], "", gsub("\t", "", x[grep(search[['bathstyle']][2], x)], fixed = TRUE))
+# kk <- gsub(reg[['bathstyle']][[1]][1], reg[['bathstyle']][[1]][2], kk)
+# kk <- gsub(reg[['bathstyle']][[2]][1], reg[['bathstyle']][[2]][2], kk)
+# kk <- gsub("^$|^\\s+$", NA, kk)
+# kk
 
 # The only ones that dont have these should be NULL
 l1 <- unlist(lapply(property_data, function(x)sum(grepl("Occupancy", x))))

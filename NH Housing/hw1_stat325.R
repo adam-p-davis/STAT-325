@@ -535,24 +535,35 @@ properties <- within(properties, {
   bathstyle <- bathstyle_2
 })
 
-properties$bathstyle
+# kstyle
+two$kstyle <- lapply(two$kstyle, function(x)gsub("model", NA, x, fixed = TRUE))
+two$kstyle <- lapply(two$kstyle, function(x)gsub("&nbsp;", NA, x, fixed = TRUE))
+kstyle_2 <- rep(0, length(two$kstyle))
+for(i in 1:length(two$kstyle)){
+  if(length(na.omit(two$kstyle[[i]])) == 0){
+    kstyle_2[i] <- NA
+  } else {
+    kstyle_2[i] <- paste(unique(na.omit(two$kstyle[[i]])), collapse = ', ')
+  }
+}
 
-# kk <- gsub(search[['bathstyle']][1], "", gsub("\t", "", x[grep(search[['bathstyle']][1], x)], fixed = TRUE))
-# kk <- gsub(search[['bathstyle']][2], "", gsub("\t", "", x[grep(search[['bathstyle']][2], x)], fixed = TRUE))
-# kk <- gsub(reg[['bathstyle']][[1]][1], reg[['bathstyle']][[1]][2], kk)
-# kk <- gsub(reg[['bathstyle']][[2]][1], reg[['bathstyle']][[2]][2], kk)
-# kk <- gsub("^$|^\\s+$", NA, kk)
-# kk
+properties <- within(properties, {
+  kstyle <- kstyle_2
+})
+
+## Type two are done woo
 
 # The only ones that dont have these should be NULL
-l1 <- unlist(lapply(property_data, function(x)sum(grepl("Occupancy", x))))
-l2 <- unlist(lapply(property_data, function(x)sum(grepl("Occupancy", x))))
+l1 <- unlist(lapply(property_data, function(x)sum(grepl("Bath Style:", x))))
+l2 <- unlist(lapply(property_data, function(x)sum(grepl("Baths/Plumbing", x))))
 l3 <- unlist(lapply(property_data, function(x)sum(grepl("Total Baths", x))))
 
 l4 <- cbind(l1, l2)#, l3)
 
 identical(sample_[which(!rowSums(l4))], 
           sample_[which(unlist(lapply(property_data, is.null)))])
+
+# Type two checking routine
 
 write.csv(properties, "sample_1.csv")
 

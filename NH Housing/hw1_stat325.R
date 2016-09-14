@@ -346,8 +346,6 @@ for(i in numeric_class){
 
 type_0_vals
 
-
-
 properties <- within(properties, {
   for(i in 1:length(main_content_vars)){
     assign(main_content_vars[[i]], unlist(type_0_vals[[i]]))
@@ -355,12 +353,10 @@ properties <- within(properties, {
   i <- NULL
 })
 
-head(properties)
-
 ### Back to TYPE 2 stuff (baths, half, etc.)
 # Style, model, grade, occupancy, AC Type, bedrooms, bathrooms,
 #      half baths, bath style, kitchen style
-#      'style', 'model', 'grade', 'occupancy', 'actype', 'bedrooms' (X),
+#      'style' (X), 'model', 'grade', 'occupancy', 'actype', 'bedrooms' (X),
 #      'bathrooms' (X), 'halfbaths' (X), 'bathstyle', 'kstyle'
 
 
@@ -397,8 +393,74 @@ for(i in 1:length(style_list)){
 
 style_2
 
-sample_[which(is.na(style_2))]
+# The only ones that dont have these should be NULL
+l1 <- unlist(lapply(property_data, function(x)sum(grepl("STYLE", x))))
+l2 <- unlist(lapply(property_data, function(x)sum(grepl("<td>Style</td>", x))))
+l3 <- unlist(lapply(property_data, function(x)sum(grepl("Total Baths", x))))
 
+l4 <- cbind(l1, l2)#, l3)
+
+identical(sample_[which(!rowSums(l4))], 
+          sample_[which(unlist(lapply(property_data, is.null)))])
+
+properties <- within(properties, {
+  style <- style_2
+})
+
+find_style <- function(x){
+  tryCatch({
+    if(is.null(x))return(NA)
+    if(sum(grepl("STYLE", x))){
+      styles <- gsub("STYLE", "", gsub("\t", "", x[grep("STYLE", x)], fixed = TRUE))
+    } else if(sum(grepl("<td>Style</td>", x, fixed = TRUE))){
+      styles <- gsub("Style", "", gsub("\t", "", x[grep("<td>Style</td>", x)], fixed = TRUE))
+    }
+    
+    styles <- gsub("<[^<>]*>", "", styles)
+    styles <- gsub("^\\s+|\\s+$", "", styles)
+    return(styles)
+  }, error = function(e){return(NA)})
+}
+
+type_2 <- function(x, key, searches, regex){
+    for(i in 1:length(key)){
+      assign(paste0(key[[i]], "_list"), lapply(x, function(x, key = key, searches = searches, regex = regex){
+        tryCatch({
+          if(is.null(x))return(NA)
+          if(sum(grepl(searches[[key]][1], x))){
+            keys <- gsub(searches[[key]][1], "", gsub("\t", "", x[grep(searches[[key]][1], x)], fixed = TRUE))
+          } else if(sum(grepl(searches[[key]][2], x, fixed = TRUE))){
+            keys <- gsub(searches[[key]][2], "", gsub("\t", "", x[grep(searches[[key]][2], x)], fixed = TRUE))
+          }
+          
+          keys <- gsub(regex[[key]][[1]][1], regex[[key]][[1]][2], keys)
+          keys <- gsub(regex[[key]][[2]][1], regex[[key]][[2]][2], keys)
+          return(keys)
+        }, error = function(e){return(NA)})
+      }))
+    }
+}
+
+
+nombres <- c('model')
+for(i in nombres){
+  assign(paste0("find_", i), write_type_2(i, ))
+}
+
+
+style_list <- lapply(property_data, function(x)find_style(x))
+style_list
+
+style_2 <- rep(0, length(style_list))
+for(i in 1:length(style_list)){
+  if(length(na.omit(style_list[[i]])) == 0){
+    style_2[i] <- NA
+  } else {
+    style_2[i] <- paste(unique(style_list[[i]]), collapse = ', ')
+  }
+}
+
+style_2
 
 # The only ones that dont have these should be NULL
 l1 <- unlist(lapply(property_data, function(x)sum(grepl("STYLE", x))))
@@ -417,3 +479,4 @@ properties <- within(properties, {
 
 
 write.csv(properties, "sample_1.csv")
+

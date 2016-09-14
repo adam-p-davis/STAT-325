@@ -125,8 +125,6 @@ find_loc <- function(x){
 
 # Determine location
 loc_list <- lapply(property_data, function(x)find_loc(x))
-head(unlist(loc_list)) 
-
 # Assign character vector to data frame
 properties$location <- unlist(loc_list)
 
@@ -153,7 +151,6 @@ find_val <- function(x){
     }
   }, error = function(e){return(NA)})
 }
-
 # Determine totval
 val_list <- lapply(property_data, function(x)find_val(x))
 
@@ -247,9 +244,6 @@ identical(sample_[which(!rowSums(l4))],
           sample_[which(unlist(lapply(property_data, is.null)))])
 
 properties$bathrooms <- bath_2
-table(properties$bathrooms)
-
-
 
 find_half <- function(x){
   tryCatch({
@@ -713,25 +707,28 @@ sales_list_2 <- lapply(sales_list, function(x){
 sales_list_2
 # 1, 3, 11
 
-for(i in 1:5){
-  assign(paste0("buyer", i), 
-         unlist(lapply(sales_list_2, function(x, i_ = i){
-           tryCatch({
-             x[[i_]][1]
-           }, error = function(e){return(NA)})
-         })))
-  assign(paste0("price", i), 
-         unlist(lapply(sales_list_2, function(x, i_ = i){
-           tryCatch({
-             return(as.numeric(x[[i_]][3]))
-           }, error = function(e){return(NA)})
-         })))
-  assign(paste0("date", i), 
-         unlist(lapply(sales_list_2, function(x, i_ = i){
-           tryCatch({
-             x[[i_]][11]
-           }, error = function(e){return(NA)})
-         })))
-}
+properties <- within(properties, {
+  for(i in 1:5){
+    assign(paste0("buyer", i), 
+           unlist(lapply(sales_list_2, function(x, i_ = i){
+             tryCatch({
+               x[[i_]][1]
+             }, error = function(e){return(NA)})
+           })))
+    assign(paste0("price", i), 
+           unlist(lapply(sales_list_2, function(x, i_ = i){
+             tryCatch({
+               return(as.numeric(x[[i_]][3]))
+             }, error = function(e){return(NA)})
+           })))
+    assign(paste0("date", i), 
+           unlist(lapply(sales_list_2, function(x, i_ = i){
+             tryCatch({
+               x[[i_]][11]
+             }, error = function(e){return(NA)})
+           })))
+  }
+  i <- NULL
+})
 
-write.csv(properties, "sample_1.csv")
+write.csv(properties, "325_apd29.csv")

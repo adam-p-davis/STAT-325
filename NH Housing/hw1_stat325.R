@@ -42,7 +42,7 @@
 #      half baths, bath style, kitchen style
 #      'style', 'model', 'grade', 'occupancy', 'actype', 'bedrooms',
 #      'bathrooms, 'halfbaths', 'bathstyle', 'kstyle'
-#    3 The sum of the value of any extra features
+#    x The sum of the value of any extra features
 #      'exval'
 #    x Land size (in acres)
 #      'acres'
@@ -52,7 +52,7 @@
 #      'neighborhood'
 #    x Appraised value of the land
 #      'landval'
-#    4 Gross area of anything that seems like a 'garage'
+#    x Gross area of anything that seems like a 'garage'
 #      'garagesqft'
 
 # NEW 9/13/16
@@ -218,9 +218,11 @@ find_bath <- function(x){
     }
     baths <- gsub("<[^<>]*>", "", baths)
     baths <- gsub("^\\s+|\\s+$", "", baths)
-    return(as.numeric(gsub("[^0-9.+]", "", baths)))
+    return(as.numeric(gsub("[^0-9.]", "", baths)))
   }, error = function(e){return(NA)})
 }
+
+# (B)(a)*(thr)(oo)*(m)
 
 bath_list <- lapply(property_data, function(x)find_bath(x))
 
@@ -678,6 +680,33 @@ garages_list_2 <- lapply(garages_list, function(x){
 properties <- within(properties, {
   garagesqft <- unlist(garages_list_2)
 })
+
+## recent sales
+sales_list <- lapply(property_data, function(x){
+    tryCatch({
+      if(is.null(x))return(NA)
+      start <- "MainContent_grdSales"
+      end <- "</table>"
+      sales <- gsub("\t", "", x[grep(start, x):
+                                 (grep(start, x) + 
+                                    grep(end, x[grep(start, x):length(x)])[1])], fixed = TRUE)
+      return(sales)
+    }, error = function(e){return(NA)})
+})
+
+sales_list <- lapply(sales_list, function(x)gsub("^\\s+|\\s+$", "", x))
+sales_list_2 <- lapply(sales_list, function(x){
+  tryCatch({
+    if(sum(is.na(x)) == length(x))return(NA)
+    val_lines <- x[(grep("<th scope=\"col\">Owner", x) + 2):length(x)]
+    val_lines <- gsub("<[^<>]*>", ";", val_lines)
+    if(identical(val_lines, character(0))){
+      val_lines <- NA
+    }
+    return(val_lines)
+  }, error = function(e){return(NA)})
+})
+sales_list_2
 
 write.csv(properties, "sample_1.csv")
 

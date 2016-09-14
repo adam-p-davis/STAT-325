@@ -505,7 +505,21 @@ properties <- within(properties, {
   occupancy <- occupancy_2
 })
 
+# actype
+actype_2 <- rep(0, length(two$actype))
+for(i in 1:length(two$actype)){
+  if(length(na.omit(two$actype[[i]])) == 0){
+    actype_2[i] <- NA
+  } else {
+    actype_2[i] <- paste(unique(na.omit(two$actype[[i]])), collapse = ', ')
+  }
+}
 
+properties <- within(properties, {
+  actype <- actype_2
+})
+
+#
 
 # The only ones that dont have these should be NULL
 l1 <- unlist(lapply(property_data, function(x)sum(grepl("Occupancy", x))))

@@ -387,7 +387,7 @@ for(i in 1:length(style_list)){
   if(length(na.omit(style_list[[i]])) == 0){
     style_2[i] <- NA
   } else {
-    style_2[i] <- paste(unique(style_list[[i]]), collapse = ', ')
+    style_2[i] <- paste(unique(na.omit(style_list[[i]])), collapse = ', ')
   }
 }
 
@@ -409,21 +409,25 @@ properties <- within(properties, {
 
 
 ## more type 2
-key_ <- list('model')
+key_ <- list('model', 'grade')
 
 search <- list(
-  model = c("MODEL", "Model")
+  model = c("MODEL", "Model"),
+  grade = c("Grade:", "Grade")
 )
 reg <- list(
   model = list(
+    c("<[^<>]*>", ""),c("^\\s+|\\s+$", "")
+  ),
+  grade = list(
     c("<[^<>]*>", ""),c("^\\s+|\\s+$", "")
   )
 )
 
 type_2 <- function(x, key_, search, reg){
   result <- list()  
- for(i in 1:length(key)){
-      result[[key[[i]]]] <- lapply(x, function(y, key = key_, searches = search, regex = reg){
+  for(i in 1:length(key_)){
+      result[[key_[[i]]]] <- lapply(x, function(y, key = key_, searches = search, regex = reg){
         tryCatch({
           if(is.null(y))return(NA)
           if(sum(grepl(searches[[key[[i]]]][1], y))){
@@ -440,7 +444,8 @@ type_2 <- function(x, key_, search, reg){
   return(result)
 }
 
-two <- type_2(property_data, key, search, reg)
+two <- type_2(property_data, key_, search, reg)
+two$grade
 
 # model
 model_2 <- rep(0, length(two$model))
@@ -448,29 +453,18 @@ for(i in 1:length(two$model)){
   if(length(na.omit(two$model[[i]])) == 0){
     model_2[i] <- NA
   } else {
-    model_2[i] <- paste(unique(style_list[[i]]), collapse = ', ')
+    model_2[i] <- paste(unique(na.omit(style_list[[i]])), collapse = ', ')
   }
 }
 
 properties <- within(properties, {
-  model <- 1
-}
+  model <- model_2
+})
 
-unlist(two)
 
-style_list <- lapply(property_data, function(x)find_style(x))
-style_list
+# grade
 
-style_2 <- rep(0, length(style_list))
-for(i in 1:length(style_list)){
-  if(length(na.omit(style_list[[i]])) == 0){
-    style_2[i] <- NA
-  } else {
-    style_2[i] <- paste(unique(style_list[[i]]), collapse = ', ')
-  }
-}
 
-style_2
 
 # The only ones that dont have these should be NULL
 l1 <- unlist(lapply(property_data, function(x)sum(grepl("STYLE", x))))
@@ -481,12 +475,6 @@ l4 <- cbind(l1, l2)#, l3)
 
 identical(sample_[which(!rowSums(l4))], 
           sample_[which(unlist(lapply(property_data, is.null)))])
-
-properties <- within(properties, {
-  style <- style_2
-})
-
-
 
 write.csv(properties, "sample_1.csv")
 

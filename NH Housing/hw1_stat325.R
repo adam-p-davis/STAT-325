@@ -611,6 +611,7 @@ properties <- within(properties, {
   multibuilding <- unlist(multi_list) > 1
 })
 
+# exval
 features_list <- lapply(property_data, function(x){
   tryCatch({
     if(is.null(x))return(NA)
@@ -645,7 +646,37 @@ features_list_2 <- lapply(features_list, function(x){
 })
 
 properties <- within(properties, {
-  features_list_2
+  exval <- unlist(features_list_2)
+})
+
+## garagesqft
+garages_list <- lapply(property_data, function(x){
+  tryCatch({
+    if(is.null(x))return(NA)
+    start <- "MainContent_ctl01_grdSub"
+    end <- "</table>"
+    subs <- gsub("\t", "", x[grep(start, x):
+                                   (grep(start, x) + 
+                                      grep(end, x[grep(start, x):length(x)])[1])], fixed = TRUE)
+    return(subs)
+  }, error = function(e){return(NA)})
+})
+
+garages_list <- lapply(garages_list, function(x)gsub("^\\s+|\\s+$", "", x))
+garages_list_2 <- lapply(garages_list, function(x){
+  tryCatch({
+    if(sum(is.na(x)) == length(x))return(NA)
+    val_lines <- x[grep("Garage", x, fixed = TRUE)+1]
+    val_lines <- gsub("[^0-9.]", "", val_lines)
+    if(identical(val_lines, character(0))){
+      val_lines <- NA
+    }
+    return(sum(as.numeric(val_lines)))
+  }, error = function(e){return(NA)})
+})
+
+properties <- within(properties, {
+  garagesqft <- unlist(garages_list_2)
 })
 
 write.csv(properties, "sample_1.csv")

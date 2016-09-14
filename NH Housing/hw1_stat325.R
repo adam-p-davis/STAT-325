@@ -369,9 +369,9 @@ find_style <- function(x){
     if(is.null(x))return(NA)
     if(sum(grepl("STYLE", x))){
       styles <- gsub("STYLE", "", gsub("\t", "", x[grep("STYLE", x)], fixed = TRUE))
+    } else if(sum(grepl("<td>Style</td>", x, fixed = TRUE))){
+      styles <- gsub("Style", "", gsub("\t", "", x[grep("<td>Style</td>", x)], fixed = TRUE))
     }
-    # } else if(sum(grepl("Ttl Bathrms:", x))){
-    #   styles <- gsub("\t", "", x[grep("Ttl Bathrms:", x)], fixed = TRUE)
     # } else if(sum(grepl("Total Baths", x))){
     #   styles <- gsub("\t", "", x[grep("Total Baths", x)], fixed = TRUE)
     # }
@@ -381,23 +381,38 @@ find_style <- function(x){
   }, error = function(e){return(NA)})
 }
 
+
+
 style_list <- lapply(property_data, function(x)find_style(x))
+style_list
 
-unlist(style_list)
+style_2 <- rep(0, length(style_list))
+for(i in 1:length(style_list)){
+  if(length(na.omit(style_list[[i]])) == 0){
+    style_2[i] <- NA
+  } else {
+    style_2[i] <- paste(unique(style_list[[i]]), collapse = ', ')
+  }
+}
 
+style_2
+
+sample_[which(is.na(style_2))]
 
 
 # The only ones that dont have these should be NULL
-l1 <- unlist(lapply(property_data, function(x)sum(grepl("Total Bthrms:", x))))
-l2 <- unlist(lapply(property_data, function(x)sum(grepl("Ttl Bathrms:", x))))
+l1 <- unlist(lapply(property_data, function(x)sum(grepl("STYLE", x))))
+l2 <- unlist(lapply(property_data, function(x)sum(grepl("<td>Style</td>", x))))
 l3 <- unlist(lapply(property_data, function(x)sum(grepl("Total Baths", x))))
 
-l4 <- cbind(l1, l2, l3)
+l4 <- cbind(l1, l2)#, l3)
 
 identical(sample_[which(!rowSums(l4))], 
           sample_[which(unlist(lapply(property_data, is.null)))])
 
-properties$bathrooms <- bath_2
+properties <- within(properties, {
+  style <- style_2
+})
 
 
 

@@ -169,6 +169,16 @@ for(i in 1:length(beds_list)){
   }
 }
 
+# The only ones that dont have these are NULL
+l1 <- unlist(lapply(property_data, function(x)sum(grepl("Total Bedrooms:", x))))
+l2 <- unlist(lapply(property_data, function(x)sum(grepl("Ttl Bedrms:", x))))
+l3 <- unlist(lapply(property_data, function(x)sum(grepl("Total Bedrms", x))))
+
+l4 <- cbind(l1, l2, l3)
+
+identical(sample_[which(!rowSums(l4))], 
+          sample_[which(unlist(lapply(property_data, is.null)))])
+
 beds_list[which(unlist(lapply(beds_list, length)) != 1)]
 properties$bedrooms <- beds_2
 
@@ -200,6 +210,17 @@ for(i in 1:length(bath_list)){
   }
 }
 
+# The only ones that dont have these are NULL
+l1 <- unlist(lapply(property_data, function(x)sum(grepl("Total Bthrms:", x))))
+l2 <- unlist(lapply(property_data, function(x)sum(grepl("Ttl Bathrms:", x))))
+l3 <- unlist(lapply(property_data, function(x)sum(grepl("Total Baths", x))))
+
+l4 <- cbind(l1, l2, l3)
+
+identical(sample_[which(!rowSums(l4))], 
+          sample_[which(unlist(lapply(property_data, is.null)))])
+
+
 which(unlist(lapply(property_data, is.null))) %in% which(is.na(properties$bathrooms))
 
 checker <- property_data[which(is.na(properties$bathrooms))]
@@ -216,9 +237,7 @@ l3 <- lapply(property_data, function(x){
   return(x[grep("Total Baths", x)])
 })
 
-unlist(l1)
-unlist(l2)
-unlist(l3)
+length(unlist(l1)) + length(unlist(l2)) + length(unlist(l3))
 cbind(unlist(l1), unlist(l2), unlist(l3))
 
 properties$bathrooms <- bath_2

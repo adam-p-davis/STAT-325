@@ -385,14 +385,7 @@ style_list <- lapply(property_data, function(x)find_style(x))
 
 unlist(style_list)
 
-style_2 <- rep(0, length(style_list))
-for(i in 1:length(style_list)){
-  if(length(na.omit(style_list[[i]])) == 0){
-    style_2[i] <- NA
-  } else {
-    style_2[i] <- sum(na.omit(bath_list[[i]]))
-  }
-}
+
 
 # The only ones that dont have these should be NULL
 l1 <- unlist(lapply(property_data, function(x)sum(grepl("Total Bthrms:", x))))

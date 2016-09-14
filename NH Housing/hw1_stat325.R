@@ -169,7 +169,7 @@ for(i in 1:length(beds_list)){
   }
 }
 
-# The only ones that dont have these are NULL
+# The only ones that dont have these should be NULL
 l1 <- unlist(lapply(property_data, function(x)sum(grepl("Total Bedrooms:", x))))
 l2 <- unlist(lapply(property_data, function(x)sum(grepl("Ttl Bedrms:", x))))
 l3 <- unlist(lapply(property_data, function(x)sum(grepl("Total Bedrms", x))))
@@ -210,7 +210,7 @@ for(i in 1:length(bath_list)){
   }
 }
 
-# The only ones that dont have these are NULL
+# The only ones that dont have these should be NULL
 l1 <- unlist(lapply(property_data, function(x)sum(grepl("Total Bthrms:", x))))
 l2 <- unlist(lapply(property_data, function(x)sum(grepl("Ttl Bathrms:", x))))
 l3 <- unlist(lapply(property_data, function(x)sum(grepl("Total Baths", x))))
@@ -219,26 +219,6 @@ l4 <- cbind(l1, l2, l3)
 
 identical(sample_[which(!rowSums(l4))], 
           sample_[which(unlist(lapply(property_data, is.null)))])
-
-
-which(unlist(lapply(property_data, is.null))) %in% which(is.na(properties$bathrooms))
-
-checker <- property_data[which(is.na(properties$bathrooms))]
-
-l1 <- lapply(property_data, function(x){
-  return(x[grep("Total Bthrms:", x)])
-})
-
-l2 <- lapply(property_data, function(x){
-  return(x[grep("Ttl Bathrms:", x)])
-})
-
-l3 <- lapply(property_data, function(x){
-  return(x[grep("Total Baths", x)])
-})
-
-length(unlist(l1)) + length(unlist(l2)) + length(unlist(l3))
-cbind(unlist(l1), unlist(l2), unlist(l3))
 
 properties$bathrooms <- bath_2
 table(properties$bathrooms)
@@ -269,6 +249,21 @@ for(i in 1:length(half_list)){
   half_2[i] <- sum(na.omit(half_list[[i]]))
   }
 }
+
+l1 <- unlist(lapply(property_data, function(x)sum(grepl("Total Half Baths:", x))))
+l2 <- unlist(lapply(property_data, function(x)sum(grepl("Ttl Half Bths:", x))))
+l3 <- unlist(lapply(property_data, function(x)sum(grepl("Total Baths", x))))
+
+l4 <- cbind(l1, l2, l3)
+
+bath_2[l3 != 0]
+
+sample_[which(!rowSums(l4))]
+sample_[which(unlist(lapply(property_data, is.null)))]
+
+identical(sample_[which(!rowSums(l4))], 
+          sample_[which(unlist(lapply(property_data, is.null)))])
+
 
 properties$halfbaths <- half_2
 

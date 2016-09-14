@@ -27,7 +27,7 @@
 #      'pid', 'location', 'totval'
 #    x Owner address (may be useful for zip code, used with caution)
 #      'address'
-#    1 Any sale dates and sale prices (say, up to the 5 most recent),
+#    x Any sale dates and sale prices (say, up to the 5 most recent),
 #      along with the name of the owner on that same line.
 #      * you decide how to deal with this information *
 #    x Year built
@@ -699,7 +699,11 @@ sales_list_2 <- lapply(sales_list, function(x){
   tryCatch({
     if(sum(is.na(x)) == length(x))return(NA)
     val_lines <- x[(grep("<th scope=\"col\">Owner", x) + 2):length(x)]
-    val_lines <- gsub("<[^<>]*>", ";", val_lines)
+    val_lines <- val_lines[2*seq(1:sum(grepl("<td>", val_lines))) - 1]
+    val_lines <- gsub("[,$]", "", val_lines)
+    val_lines <- gsub("<[^<>]*>", ",", val_lines)
+    val_lines <- gsub("^,|,$", "", val_lines)
+    val_lines <- lapply(val_lines, function(x)unlist(strsplit(x, ",")))
     if(identical(val_lines, character(0))){
       val_lines <- NA
     }
@@ -707,6 +711,27 @@ sales_list_2 <- lapply(sales_list, function(x){
   }, error = function(e){return(NA)})
 })
 sales_list_2
+# 1, 3, 11
+
+for(i in 1:5){
+  assign(paste0("buyer", i), 
+         unlist(lapply(sales_list_2, function(x, i_ = i){
+           tryCatch({
+             x[[i_]][1]
+           }, error = function(e){return(NA)})
+         })))
+  assign(paste0("price", i), 
+         unlist(lapply(sales_list_2, function(x, i_ = i){
+           tryCatch({
+             return(as.numeric(x[[i_]][3]))
+           }, error = function(e){return(NA)})
+         })))
+  assign(paste0("date", i), 
+         unlist(lapply(sales_list_2, function(x, i_ = i){
+           tryCatch({
+             x[[i_]][11]
+           }, error = function(e){return(NA)})
+         })))
+}
 
 write.csv(properties, "sample_1.csv")
-

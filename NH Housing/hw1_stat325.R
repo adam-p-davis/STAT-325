@@ -99,7 +99,7 @@ property_data <- lapply(files, function(x)tryCatch({scan(x, what="", sep="\n")},
                                                    error = function(e){return(NULL)}))
 
 
-sample_size <- 1000
+sample_size <- 500
 sample_ <- sample(1:n, sample_size)
 files_sample <- as.list(paste0(sample_, ".html"))
 property_data <- lapply(files_sample, function(x)tryCatch({scan(x, what="", sep="\n")}, 
@@ -192,14 +192,14 @@ for(i in 1:length(beds_list)){
 }
 
 # The only ones that dont have these should be NULL
-l1 <- unlist(lapply(property_data, function(x)sum(grepl("Total Bedrooms:", x))))
-l2 <- unlist(lapply(property_data, function(x)sum(grepl("Ttl Bedrms:", x))))
-l3 <- unlist(lapply(property_data, function(x)sum(grepl("Total Bedrms", x))))
+#l1 <- unlist(lapply(property_data, function(x)sum(grepl("Total Bedrooms:", x))))
+#l2 <- unlist(lapply(property_data, function(x)sum(grepl("Ttl Bedrms:", x))))
+#l3 <- unlist(lapply(property_data, function(x)sum(grepl("Total Bedrms", x))))
 
-l4 <- cbind(l1, l2, l3)
+#l4 <- cbind(l1, l2, l3)
 
-identical(sample_[which(!rowSums(l4))], 
-          sample_[which(unlist(lapply(property_data, is.null)))])
+#identical(sample_[which(!rowSums(l4))], 
+#          sample_[which(unlist(lapply(property_data, is.null)))])
 
 properties$bedrooms <- beds_2
 
@@ -234,14 +234,14 @@ for(i in 1:length(bath_list)){
 }
 
 # The only ones that dont have these should be NULL
-l1 <- unlist(lapply(property_data, function(x)sum(grepl("Total Bthrms:", x))))
-l2 <- unlist(lapply(property_data, function(x)sum(grepl("Ttl Bathrms:", x))))
-l3 <- unlist(lapply(property_data, function(x)sum(grepl("Total Baths", x))))
-
-l4 <- cbind(l1, l2, l3)
-
-identical(sample_[which(!rowSums(l4))], 
-          sample_[which(unlist(lapply(property_data, is.null)))])
+# l1 <- unlist(lapply(property_data, function(x)sum(grepl("Total Bthrms:", x))))
+# l2 <- unlist(lapply(property_data, function(x)sum(grepl("Ttl Bathrms:", x))))
+# l3 <- unlist(lapply(property_data, function(x)sum(grepl("Total Baths", x))))
+# 
+# l4 <- cbind(l1, l2, l3)
+# 
+# identical(sample_[which(!rowSums(l4))], 
+#           sample_[which(unlist(lapply(property_data, is.null)))])
 
 properties$bathrooms <- bath_2
 
@@ -272,22 +272,22 @@ for(i in 1:length(half_list)){
 }
 
 # The Total Baths template includes no Half bath extension
-l1 <- unlist(lapply(property_data, function(x)sum(grepl("Total Half Baths:", x))))
-l2 <- unlist(lapply(property_data, function(x)sum(grepl("Ttl Half Bths:", x))))
-l3 <- unlist(lapply(property_data, function(x)sum(grepl("Total Baths", x))))
-
-l4 <- cbind(l1, l2, l3)
-
-bath_2[l3 != 0]
-
-identical(sample_[which(!rowSums(l4))], 
-          sample_[which(unlist(lapply(property_data, is.null)))])
+# l1 <- unlist(lapply(property_data, function(x)sum(grepl("Total Half Baths:", x))))
+# l2 <- unlist(lapply(property_data, function(x)sum(grepl("Ttl Half Bths:", x))))
+# l3 <- unlist(lapply(property_data, function(x)sum(grepl("Total Baths", x))))
+# 
+# l4 <- cbind(l1, l2, l3)
+# 
+# bath_2[l3 != 0]
+# 
+# identical(sample_[which(!rowSums(l4))], 
+#           sample_[which(unlist(lapply(property_data, is.null)))])
 
 
 properties$halfbaths <- half_2
 
-properties$halfbaths[which(properties$bathrooms %% 1 == .5)] <- properties$halfbaths[which(properties$bathrooms %% 1 == .5)] + 1
-properties$bathrooms[which(properties$bathrooms %% 1 == .5)] <- properties$bathrooms[which(properties$bathrooms %% 1 == .5)] - .5
+# properties$halfbaths[which(properties$bathrooms %% 1 == .5)] <- properties$halfbaths[which(properties$bathrooms %% 1 == .5)] + 1
+# properties$bathrooms[which(properties$bathrooms %% 1 == .5)] <- properties$bathrooms[which(properties$bathrooms %% 1 == .5)] - .5
 
 
 ## Owner address
@@ -296,6 +296,7 @@ find_address <- function(x){
     if(is.null(x))return(NA)
     address <- gsub("\t", "", x[grep("MainContent_lblAddr1", x)], fixed = TRUE)
     address <- gsub("Address", "", address)
+    address <- gsub("<br>", ", ", address)
     address <- gsub("<[^<>]*>", " ", address)
     address <- gsub("\\s+", " ", address)
     return(gsub("^\\s+|\\s+$","",address))
@@ -306,6 +307,8 @@ address_list <- lapply(property_data, function(x)find_address(x))
 properties <- within(properties, {
   address <- unlist(address_list)
 })
+
+properties$address
 
 # A few of these problems can be solved in the same way, referencing some
 # MainContentlbl tag
@@ -342,7 +345,6 @@ multi_prop_map <- function(x, main_content, main_content_vars){
 }
 
 type_0_vars <- multi_prop_map(property_data, main_content, main_content_vars)
-type_0_vars
 
 type_0_vals <- lapply(type_0_vars, function(x){
   tryCatch({
@@ -361,8 +363,6 @@ type_0_vals <- lapply(type_0_vars, function(x){
     return(temp)
   }, error = function(e){return(NA)})
 })
-
-type_0_vals
 
 numeric_class <- c(1:5, 8)
 for(i in numeric_class){
@@ -421,14 +421,14 @@ for(i in 1:length(style_list)){
 style_2
 
 # The only ones that dont have these should be NULL
-l1 <- unlist(lapply(property_data, function(x)sum(grepl("STYLE", x))))
-l2 <- unlist(lapply(property_data, function(x)sum(grepl("<td>Style</td>", x))))
-l3 <- unlist(lapply(property_data, function(x)sum(grepl("Total Baths", x))))
-
-l4 <- cbind(l1, l2)#, l3)
-
-identical(sample_[which(!rowSums(l4))], 
-          sample_[which(unlist(lapply(property_data, is.null)))])
+# l1 <- unlist(lapply(property_data, function(x)sum(grepl("STYLE", x))))
+# l2 <- unlist(lapply(property_data, function(x)sum(grepl("<td>Style</td>", x))))
+# l3 <- unlist(lapply(property_data, function(x)sum(grepl("Total Baths", x))))
+# 
+# l4 <- cbind(l1, l2)#, l3)
+# 
+# identical(sample_[which(!rowSums(l4))], 
+#           sample_[which(unlist(lapply(property_data, is.null)))])
 
 properties <- within(properties, {
   style <- style_2
@@ -518,6 +518,7 @@ properties <- within(properties, {
 })
 
 # occupancy
+two$occupancy
 occupancy_2 <- rep(0, length(two$occupancy))
 for(i in 1:length(two$occupancy)){
   if(length(na.omit(two$occupancy[[i]])) == 0){
@@ -693,7 +694,9 @@ sales_list_2 <- lapply(sales_list, function(x){
   tryCatch({
     if(sum(is.na(x)) == length(x))return(NA)
     val_lines <- x[(grep("<th scope=\"col\">Owner", x) + 2):length(x)]
+    val_lines <- val_lines[1:grep("</table>", val_lines, fixed = TRUE)[1]]
     val_lines <- val_lines[2*seq(1:sum(grepl("<td>", val_lines))) - 1]
+    val_lines <- gsub("\t", "", val_lines)
     val_lines <- gsub("[,$]", "", val_lines)
     val_lines <- gsub("<[^<>]*>", ",", val_lines)
     val_lines <- gsub("^,|,$", "", val_lines)
@@ -733,6 +736,8 @@ properties <- within(properties, {
 
 head(properties)
 
+colSums(na.omit(properties == "&nbsp;"))
+
 
 write.csv(properties, "325_apd29.csv", row.names = FALSE)
 
@@ -752,7 +757,8 @@ all <- all[-5]       # Oops.
 
 thisvar <- "acres"      # Change this, run the following:
 
-x <- as.data.frame(sapply(all, function(a) a[,thisvar]),
+
+x <- as.data.frame(sapply(student_csv, function(a) a[,thisvar]),
                    stringsAsFactors=FALSE)
 table(nums <- apply(x, 1, function(a) length(unique(a))))
 
@@ -770,4 +776,26 @@ for (i in 2:ncol(x)) {
 files_csv <- as.list(dir("Sept15NH_325"))
 
 student_csv <- lapply(files_csv, function(x)read.csv(paste0("Sept15NH_325/", x), as.is=TRUE))
-sapply(student_csv, names)
+student_csv <- student_csv[-5]
+names(student_csv[[5]])[40] <- 'multibuilding'
+
+list_of_names <- as.list(sapply(student_csv, names)[[2]])
+
+x_list <- lapply(list_of_names[11:31], function(thisvar){
+  cat("#####", thisvar, "####")
+  x <- as.data.frame(sapply(student_csv, function(a) a[,thisvar]),
+                     stringsAsFactors=FALSE)
+  table(nums <- apply(x, 1, function(a) length(unique(a))))
+  
+  for (i in 2:ncol(x)) {
+    if (any(nums==i)) {
+      cat("\n\n----------------------", i, "\n")
+      temp <- x[nums==i,]
+      cat("# times there were", i, "unique values:",
+          nrow(temp), "\n")
+      print(temp[sample(1:nrow(temp), min(10,nrow(temp))),])
+      
+    }
+  }
+})
+

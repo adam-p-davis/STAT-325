@@ -731,4 +731,43 @@ properties <- within(properties, {
   i <- NULL
 })
 
-write.csv(properties, "325_apd29.csv")
+head(properties)
+
+
+write.csv(properties, "325_apd29.csv", row.names = FALSE)
+
+### COMPARE.R
+#
+# Statistical Clinic, Sept 16, 2016
+#
+# 
+
+files <- dir("datafiles", full.names = TRUE)
+all <- lapply(files, read.csv, as.is=TRUE)
+
+sapply(all, dim)
+all <- all[-5]       # Oops.
+
+#lapply(all, names)
+
+thisvar <- "acres"      # Change this, run the following:
+
+x <- as.data.frame(sapply(all, function(a) a[,thisvar]),
+                   stringsAsFactors=FALSE)
+table(nums <- apply(x, 1, function(a) length(unique(a))))
+
+for (i in 2:ncol(x)) {
+  if (any(nums==i)) {
+    cat("\n\n----------------------", i, "\n")
+    temp <- x[nums==i,]
+    cat("# times there were", i, "unique values:",
+        nrow(temp), "\n")
+    print(temp[sample(1:nrow(temp), min(10,nrow(temp))),])
+    
+  }
+}
+
+files_csv <- as.list(dir("Sept15NH_325"))
+
+student_csv <- lapply(files_csv, function(x)read.csv(paste0("Sept15NH_325/", x), as.is=TRUE))
+sapply(student_csv, names)
